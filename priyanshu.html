@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Draw</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-group input[type="radio"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e7f5ff;
+            border: 1px solid #b3d8ff;
+            border-radius: 5px;
+            color: #0056b3;
+            text-align: center;
+            font-size: 16px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <img src="LOGO with R.png" alt="Company Logo" class="logo">
+        <h2>Lucky Draw</h2>
+        <form id="luckyDrawForm">
+            <div class="form-group">
+                <label for="name">Participant's Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Participant's Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="mobile">Participant's Mobile Number:</label>
+                <input type="tel" id="mobile" name="mobile" required>
+            </div>
+            <div class="form-group">
+                <label for="address">Participant's Address:</label>
+                <input type="text" id="address" name="address" required>
+            </div>
+            <div class="form-group">
+                <label for="electricity">Participant's Sanctioned Electricity Load:</label>
+                <input type="text" id="electricity" name="electricity" required>
+            </div>
+            <div class="form-group">
+                <label>Do you want to enter with a subcity or without a subcity?</label>
+                <input type="radio" id="withSubcity" name="subcityOption" value="subcity" required>
+                <label for="withSubcity">With Subcity</label>
+                <input type="radio" id="withoutSubcity" name="subcityOption" value="withoutSubcity" required>
+                <label for="withoutSubcity">Without Subcity</label>
+            </div>
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+        <div id="result" class="result"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+
+    <script>
+        const gifts = [
+            { name: "Free Coffee", probability: 10 },
+            { name: "Gift Voucher ₹50", probability: 5 },
+            { name: "Gift Voucher ₹100", probability: 5 },
+            { name: "Gift Voucher ₹200", probability: 5 },
+            { name: "Discount Coupon 10%", probability: 5 },
+            { name: "Discount Coupon 15%", probability: 5 },
+            { name: "Discount Coupon 20%", probability: 5 },
+            { name: "Free Pen", probability: 5 },
+            { name: "Free Keychain", probability: 5 },
+            { name: "Free Mug", probability: 5 },
+            { name: "Free Notebook", probability: 5 },
+            { name: "Free T-shirt", probability: 5 },
+            { name: "Free Bag", probability: 5 },
+            { name: "Free Cap", probability: 5 },
+            { name: "Gift Hamper", probability: 5 },
+            { name: "Cashback ₹20", probability: 5 },
+            { name: "Cashback ₹50", probability: 5 },
+            { name: "Free Accessory", probability: 5 },
+            { name: "Mystery Box", probability: 5 }
+        ];
+        function selectRandomGift() {
+            const totalProbability = gifts.reduce((sum, gift) => sum + gift.probability, 0);
+            const randomNum = Math.random() * totalProbability;
+            let cumulativeProbability = 0;
+
+            for (const gift of gifts) {
+                cumulativeProbability += gift.probability;
+                if (randomNum <= cumulativeProbability) {
+                    return gift.name;
+                }
+            }
+        }
+        if (!window.sheetData) {
+            window.sheetData = [
+                ["Name", "Email", "Mobile", "Address", "Electricity Load", "Subcity Option", "Gift"]
+            ];
+        }
+        document.getElementById('luckyDrawForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const mobile = document.getElementById('mobile').value;
+            const address = document.getElementById('address').value;
+            const electricity = document.getElementById('electricity').value;
+            const subcityOption = document.querySelector('input[name="subcityOption"]:checked').value;
+            const nameRegex = /^[A-Za-z\s]+$/;
+            if (!nameRegex.test(name)) {
+                alert("Please enter a valid name (letters and spaces only).");
+                return;
+            }
+            const mobileRegex = /^\d{10}$/;
+            if (!mobileRegex.test(mobile)) {
+                alert("Please enter a valid 10-digit mobile number.");
+                return;
+            }
+            const selectedGift = selectRandomGift();
+            const newRow = [name, email, mobile, address, electricity, subcityOption, selectedGift];
+            window.sheetData.push(newRow);
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(window.sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, "Lucky Draw Entries");
+            const excelFile = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+            const buffer = new ArrayBuffer(excelFile.length);
+            const view = new Uint8Array(buffer);
+            for (let i = 0; i < excelFile.length; i++) {
+                view[i] = excelFile.charCodeAt(i) & 0xff;
+            }
+
+            const blob = new Blob([buffer], { type: 'application/octet-stream' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `lucky_draw_entries.xlsx`;  
+            a.click();
+            document.getElementById('result').innerText = `Congratulations ${name}! You have won: ${selectedGift}`;
+            document.getElementById('result').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
